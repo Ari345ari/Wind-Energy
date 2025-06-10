@@ -25,7 +25,6 @@ const createIcon = (color, symbol) => new L.Icon({
     popupAnchor: [0, -48],
     shadowSize: [48, 48],
   });
-  
 
 const turbineIcon = createIcon('#3b82f6', '⚡');
 const suggestedIcon = createIcon('#10b981', '★');
@@ -275,6 +274,7 @@ export default function EnhancedWindMap() {
   const [loading, setLoading] = useState(false);
   const [activeLayer, setActiveLayer] = useState('satellite');
   const [filterMinCapacity, setFilterMinCapacity] = useState(0);
+  const [headerVisible, setHeaderVisible] = useState(false);
 
   // Simulate weather data updates
   useEffect(() => {
@@ -322,80 +322,95 @@ export default function EnhancedWindMap() {
 
   return (
     <div style={styles.container}>
-      {/* Modern Header */}
-      <div style={styles.header}>
-        <div style={styles.headerContent}>
-          <div style={styles.titleSection}>
-            <h1 style={styles.title}>
-              🇲🇳 Mongolia Wind Energy Intelligence Platform
-            </h1>
-            <p style={styles.subtitle}>
-              Advanced wind resource assessment and energy planning tool
-            </p>
-          </div>
-          
-          <div style={styles.statsBar}>
-            <div style={styles.stat}>
-              <span style={styles.statValue}>{windFarms.reduce((sum, farm) => sum + farm.capacity, 0)}</span>
-              <span style={styles.statLabel}>MW Installed</span>
+      {/* Hover-activated Header */}
+      <div 
+        style={{
+          ...styles.hoverZone,
+          ...(headerVisible ? styles.hoverZoneActive : {})
+        }}
+        onMouseEnter={() => setHeaderVisible(true)}
+        onMouseLeave={() => setHeaderVisible(false)}
+      >
+        <div style={{
+          ...styles.header,
+          ...(headerVisible ? styles.headerVisible : {})
+        }}>
+          <div style={styles.headerContent}>
+            <div style={styles.titleSection}>
+              <h1 style={styles.title}>
+                🇲🇳 Mongolia Wind Energy Intelligence Platform
+              </h1>
+              <p style={styles.subtitle}>
+                Advanced wind resource assessment and energy planning tool
+              </p>
             </div>
-            <div style={styles.stat}>
-              <span style={styles.statValue}>{windFarms.length}</span>
-              <span style={styles.statLabel}>Active Farms</span>
-            </div>
-            <div style={styles.stat}>
-              <span style={styles.statValue}>{suggestedLocations.length}</span>
-              <span style={styles.statLabel}>Prime Locations</span>
+            
+            <div style={styles.statsBar}>
+              <div style={styles.stat}>
+                <span style={styles.statValue}>{windFarms.reduce((sum, farm) => sum + farm.capacity, 0)}</span>
+                <span style={styles.statLabel}>MW Installed</span>
+              </div>
+              <div style={styles.stat}>
+                <span style={styles.statValue}>{windFarms.length}</span>
+                <span style={styles.statLabel}>Active Farms</span>
+              </div>
+              <div style={styles.stat}>
+                <span style={styles.statValue}>{suggestedLocations.length}</span>
+                <span style={styles.statLabel}>Prime Locations</span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Control Panel */}
-      <div style={styles.controlPanel}>
-        <div style={styles.controlGroup}>
-          <button
-            onClick={() => setShowSuggested(!showSuggested)}
-            style={{...styles.controlBtn, ...(showSuggested ? styles.controlBtnActive : {})}}
-          >
-            ⭐ Prime Locations
-          </button>
-          
-          <button
-            onClick={() => setShowWeather(!showWeather)}
-            style={{...styles.controlBtn, ...(showWeather ? styles.controlBtnActive : {})}}
-          >
-            🌤️ Weather Stations
-          </button>
-          
-          <button
-            onClick={() => setShowWindZones(!showWindZones)}
-            style={{...styles.controlBtn, ...(showWindZones ? styles.controlBtnActive : {})}}
-          >
-            💨 Wind Zones
-          </button>
-        </div>
+        {/* Control Panel */}
+        <div style={{
+          ...styles.controlPanel,
+          ...(headerVisible ? styles.controlPanelVisible : {})
+        }}>
+          <div style={styles.controlGroup}>
+            <button
+              onClick={() => setShowSuggested(!showSuggested)}
+              style={{...styles.controlBtn, ...(showSuggested ? styles.controlBtnActive : {})}}
+            >
+              ⭐ Prime Locations
+            </button>
+            
+            <button
+              onClick={() => setShowWeather(!showWeather)}
+              style={{...styles.controlBtn, ...(showWeather ? styles.controlBtnActive : {})}}
+            >
+              🌤️ Weather Stations
+            </button>
+            
+            <button
+              onClick={() => setShowWindZones(!showWindZones)}
+              style={{...styles.controlBtn, ...(showWindZones ? styles.controlBtnActive : {})}}
+            >
+              💨 Wind Zones
+            </button>
+          </div>
 
-        <div style={styles.controlGroup}>
-          <select
-            value={activeLayer}
-            onChange={(e) => toggleLayer(e.target.value)}
-            style={styles.layerSelect}
-          >
-            <option value="street">Street Map</option>
-            <option value="satellite">Satellite</option>
-            <option value="terrain">Terrain</option>
-          </select>
-          
-          <input
-            type="range"
-            min="0"
-            max="100"
-            value={filterMinCapacity}
-            onChange={(e) => setFilterMinCapacity(Number(e.target.value))}
-            style={styles.slider}
-          />
-          <span style={styles.filterLabel}>Min: {filterMinCapacity}MW</span>
+          <div style={styles.controlGroup}>
+            <select
+              value={activeLayer}
+              onChange={(e) => toggleLayer(e.target.value)}
+              style={styles.layerSelect}
+            >
+              <option value="street">Street Map</option>
+              <option value="satellite">Satellite</option>
+              <option value="terrain">Terrain</option>
+            </select>
+            
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={filterMinCapacity}
+              onChange={(e) => setFilterMinCapacity(Number(e.target.value))}
+              style={styles.slider}
+            />
+            <span style={styles.filterLabel}>Min: {filterMinCapacity}MW</span>
+          </div>
         </div>
       </div>
 
@@ -433,7 +448,7 @@ export default function EnhancedWindMap() {
             
             return (
               <Marker key={farm.id} position={farm.position} icon={turbineIcon}>
-                <Popup maxWidth={400} className="custom-popup">
+                <Popup maxWidth={400} className="custom-popup" autoClose={false} closeOnClick={false}>
                   <div style={styles.popupContent}>
                     <div style={styles.popupHeader}>
                       <h3 style={styles.popupTitle}>⚡ {farm.name}</h3>
@@ -492,7 +507,7 @@ export default function EnhancedWindMap() {
             
             return (
               <Marker key={location.id} position={location.position} icon={suggestedIcon}>
-                <Popup maxWidth={450}>
+                <Popup maxWidth={450} autoClose={false} closeOnClick={false}>
                   <div style={styles.popupContent}>
                     <div style={styles.popupHeader}>
                       <h3 style={styles.popupTitle}>⭐ {location.name}</h3>
@@ -543,7 +558,7 @@ export default function EnhancedWindMap() {
           {/* Weather stations */}
           {showWeather && weatherStations.map((station) => (
             <Marker key={station.id} position={station.position} icon={weatherIcon}>
-              <Popup>
+              <Popup autoClose={false} closeOnClick={false}>
                 <div style={styles.weatherPopup}>
                   <h4>🌤️ {station.name}</h4>
                   <div style={styles.weatherGrid}>
@@ -576,7 +591,7 @@ export default function EnhancedWindMap() {
           {/* User selected location */}
           {selectedLocation && (
             <Marker position={selectedLocation.position} icon={userIcon}>
-              <Popup>
+              <Popup autoClose={false} closeOnClick={false}>
                 <div style={styles.userPopup}>
                   <h4>📍 Wind Assessment</h4>
                   <div style={styles.assessmentGrid}>
@@ -607,47 +622,9 @@ export default function EnhancedWindMap() {
           </div>
         )}
       </div>
-
-      {/* Info Panel */}
-      <div style={styles.infoPanel}>
-        <div style={styles.infoPanelContent}>
-          <h3>🗺️ Interactive Features</h3>
-          <div style={styles.featureGrid}>
-            <div style={styles.feature}>
-              <span style={styles.featureIcon}>⚡</span>
-              <div>
-                <strong>Existing Wind Farms</strong>
-                <p>Detailed performance data and technical specifications</p>
-              </div>
-            </div>
-            <div style={styles.feature}>
-              <span style={styles.featureIcon}>⭐</span>
-              <div>
-                <strong>Prime Development Sites</strong>
-                <p>AI-identified optimal locations with comprehensive analysis</p>
-              </div>
-            </div>
-            <div style={styles.feature}>
-              <span style={styles.featureIcon}>🌤️</span>
-              <div>
-                <strong>Real-time Weather</strong>
-                <p>Current conditions from meteorological stations</p>
-              </div>
-            </div>
-            <div style={styles.feature}>
-              <span style={styles.featureIcon}>📍</span>
-              <div>
-                <strong>Custom Assessment</strong>
-                <p>Click anywhere to evaluate wind energy potential</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
-
 // Comprehensive styling
 const styles = {
   container: {
