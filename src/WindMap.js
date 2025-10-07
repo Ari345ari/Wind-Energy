@@ -331,36 +331,28 @@ export default function EnhancedWindMap() {
         onMouseEnter={() => setHeaderVisible(true)}
         onMouseLeave={() => setHeaderVisible(false)}
       >
-        <div style={{
-          ...styles.header,
-          ...(headerVisible ? styles.headerVisible : {})
-        }}>
-          <div style={styles.headerContent}>
-            <div style={styles.titleSection}>
-              <h1 style={styles.title}>
-                🇲🇳 Mongolia Wind Energy Intelligence Platform
-              </h1>
-              <p style={styles.subtitle}>
-                Advanced wind resource assessment and energy planning tool
-              </p>
-            </div>
-            
-            <div style={styles.statsBar}>
-              <div style={styles.stat}>
-                <span style={styles.statValue}>{windFarms.reduce((sum, farm) => sum + farm.capacity, 0)}</span>
-                <span style={styles.statLabel}>MW Installed</span>
-              </div>
-              <div style={styles.stat}>
-                <span style={styles.statValue}>{windFarms.length}</span>
-                <span style={styles.statLabel}>Active Farms</span>
-              </div>
-              <div style={styles.stat}>
-                <span style={styles.statValue}>{suggestedLocations.length}</span>
-                <span style={styles.statLabel}>Prime Locations</span>
-              </div>
-            </div>
-          </div>
-        </div>
+        <div style={styles.header}>
+  <div style={styles.titleContainer}>
+    <h1 style={styles.title}>Mongolia Wind Energy Intelligence Platform</h1>
+  </div>
+  <p style={styles.subtitle}>Advanced wind resource assessment and energy planning tool</p>
+  
+  <div style={styles.statsRow}>
+    <div style={styles.statBox}>
+      <span style={styles.statValue}>229.6 MW</span>
+      <span style={styles.statLabel}>Installed</span>
+    </div>
+    <div style={styles.statBox}>
+      <span style={styles.statValue}>4</span>
+      <span style={styles.statLabel}>Active Farms</span>
+    </div>
+    <div style={styles.statBox}>
+      <span style={styles.statValue}>4</span>
+      <span style={styles.statLabel}>Prime Locations</span>
+    </div>
+  </div>
+</div>
+
 
         {/* Control Panel */}
         <div style={{
@@ -625,414 +617,151 @@ export default function EnhancedWindMap() {
     </div>
   );
 }
-// Comprehensive styling
 const styles = {
   container: {
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
     height: '100vh',
+    width: '100vw',
+    overflow: 'hidden',
+    position: 'relative',
+    background: '#000',
+  },
+
+  mapWrapper: {
+    position: 'absolute',
+    inset: 0,
+  },
+  header: {
+    position: 'absolute',
+    top: '20px',
+    left: '20px',
+    background: 'rgba(0,0,0,0.45)',
+    backdropFilter: 'blur(12px)',
+    border: '1px solid rgba(255,255,255,0.2)',
+    borderRadius: '12px',
+    padding: '16px 20px',
     display: 'flex',
     flexDirection: 'column',
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    width: '340px',  // wider header
+    gap: '12px',
+    color: 'white',
+    zIndex: 1000,
+    boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
+    transition: 'all 0.3s ease',
   },
   
-  header: {
-    background: 'rgba(255, 255, 255, 0.95)',
-    backdropFilter: 'blur(10px)',
-    borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
-    padding: '20px',
-    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
-  },
-  
-  headerContent: {
-    maxWidth: '1200px',
-    margin: '0 auto',
+  titleContainer: {
     display: 'flex',
-    justifyContent: 'space-between',
+    flexDirection: 'row',   // title in row
     alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: '20px',
-  },
-  
-  titleSection: {
-    flex: 1,
+    gap: '8px',
   },
   
   title: {
-    fontSize: '2.2rem',
+    fontSize: '1.1rem',
     fontWeight: '700',
-    margin: '0 0 8px 0',
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    WebkitBackgroundClip: 'text',
-    WebkitTextFillColor: 'transparent',
+    margin: 0,
+    color: 'white',
   },
   
   subtitle: {
-    fontSize: '1.1rem',
-    color: '#6b7280',
+    fontSize: '0.85rem',
     margin: 0,
+    color: '#d1d5db',
   },
   
-  statsBar: {
+  statsRow: {
     display: 'flex',
-    gap: '30px',
-  },
-  
-  stat: {
-    textAlign: 'center',
-    display: 'flex',
-    flexDirection: 'column',
-  },
-  
-  statValue: {
-    fontSize: '2rem',
-    fontWeight: '700',
-    color: '#1f2937',
-  },
-  
-  statLabel: {
-    fontSize: '0.9rem',
-    color: '#6b7280',
-    textTransform: 'uppercase',
-    letterSpacing: '0.05em',
-  },
-  
-  controlPanel: {
-    background: 'rgba(255, 255, 255, 0.9)',
-    backdropFilter: 'blur(10px)',
-    padding: '15px 20px',
-    display: 'flex',
+    flexDirection: 'row',  // stats in a row
     justifyContent: 'space-between',
-    alignItems: 'center',
-    borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
-    flexWrap: 'wrap',
-    gap: '15px',
-  },
-  
-  controlGroup: {
-    display: 'flex',
-    alignItems: 'center',
     gap: '12px',
   },
   
+  statBox: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+  },
+  
+  statValue: {
+    fontSize: '0.95rem',
+    fontWeight: '600',
+    color: 'white',
+  },
+  
+  statLabel: {
+    fontSize: '0.75rem',
+    color: '#d1d5db',
+    textTransform: 'uppercase',
+    marginTop: '2px',
+  },
+  
+
+  controlPanel: {
+    position: 'absolute',
+    bottom: '30px',
+    left: '30px',
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center', 
+    gap: '12px',
+    zIndex: 1000,
+    flexWrap: 'nowrap',
+  },
+  
   controlBtn: {
-    padding: '8px 16px',
-    borderRadius: '20px',
-    border: '2px solid #e5e7eb',
-    background: 'white',
-    color: '#374151',
-    fontSize: '0.9rem',
+    background: 'rgba(0,0,0,0.45)',          // dark glassy
+    backdropFilter: 'blur(12px)',
+    border: '1px solid rgba(255,255,255,0.2)',
+    borderRadius: '12px',
+    padding: '10px 16px',
+    color: 'white',
+    fontSize: '0.85rem',
     fontWeight: '500',
     cursor: 'pointer',
     transition: 'all 0.3s ease',
-    display: 'flex',
+    display: 'inline-flex',
     alignItems: 'center',
     gap: '6px',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
   },
   
   controlBtnActive: {
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    background: 'rgba(102,126,234,0.85)',
+    borderColor: 'rgba(102,126,234,0.9)',
     color: 'white',
-    borderColor: '#667eea',
     transform: 'translateY(-1px)',
-    boxShadow: '0 4px 12px rgba(102, 126, 234, 0.4)',
+    boxShadow: '0 6px 20px rgba(102,126,234,0.35)',
+  },
+  
+  slider: {
+    width: '140px',
+    height: '6px',
+    borderRadius: '3px',
+    background: 'rgba(255,255,255,0.2)',
+    cursor: 'pointer',
+    outline: 'none',
+    transition: 'all 0.3s ease',
+  },
+  
+  sliderThumb: {
+    width: '16px',
+    height: '16px',
+    borderRadius: '50%',
+    background: 'rgba(102,126,234,0.9)',
+    border: '2px solid white',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
   },
   
   layerSelect: {
     padding: '8px 12px',
-    borderRadius: '8px',
-    border: '2px solid #e5e7eb',
-    background: 'white',
-    fontSize: '0.9rem',
-    cursor: 'pointer',
-  },
-  
-  slider: {
-    width: '120px',
-    height: '6px',
-    borderRadius: '3px',
-    background: '#e5e7eb',
-    outline: 'none',
-    cursor: 'pointer',
-  },
-  
-  filterLabel: {
-    fontSize: '0.85rem',
-    color: '#6b7280',
-    fontWeight: '500',
-  },
-  
-  mapWrapper: {
-    flex: 1,
-    position: 'relative',
-    margin: '0 20px 20px 20px',
-    borderRadius: '16px',
-    overflow: 'hidden',
-    boxShadow: '0 20px 40px rgba(0, 0, 0, 0.1)',
-  },
-  
-  map: {
-    height: '100%',
-    width: '100%',
-  },
-  
-  loadingOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    background: 'rgba(255, 255, 255, 0.9)',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 1000,
-  },
-  
-  loadingSpinner: {
-    textAlign: 'center',
-    color: '#374151',
-  },
-  
-  spinner: {
-    width: '40px',
-    height: '40px',
-    border: '4px solid #e5e7eb',
-    borderTop: '4px solid #667eea',
-    borderRadius: '50%',
-    animation: 'spin 1s linear infinite',
-    margin: '0 auto 15px auto',
-  },
-  
-  popupContent: {
-    maxWidth: '100%',
-    padding: '0',
-  },
-  
-  popupHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '15px',
-    paddingBottom: '10px',
-    borderBottom: '2px solid #f3f4f6',
-  },
-  
-  popupTitle: {
-    margin: 0,
-    fontSize: '1.3rem',
-    fontWeight: '700',
-    color: '#1f2937',
-  },
-  
-  statusBadge: {
-    padding: '4px 12px',
     borderRadius: '12px',
-    fontSize: '0.8rem',
-    fontWeight: '600',
+    border: '1px solid rgba(255,255,255,0.2)',
+    background: 'rgba(0,0,0,0.45)',
     color: 'white',
-    textTransform: 'uppercase',
-    letterSpacing: '0.05em',
-  },
-  
-  popupGrid: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '15px',
-  },
-  
-  popupSection: {
-    background: '#f9fafb',
-    padding: '12px',
-    borderRadius: '8px',
-  },
-  
-  sectionTitle: {
-    margin: '0 0 10px 0',
-    fontSize: '1rem',
-    fontWeight: '600',
-    color: '#374151',
-  },
-  
-  specGrid: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: '8px',
-    fontSize: '0.9rem',
-    lineHeight: '1.4',
-  },
-  
-  metricsGrid: {
-    display: 'flex',
-    gap: '15px',
-  },
-  
-  metric: {
-    textAlign: 'center',
-    flex: 1,
-  },
-  
-  metricValue: {
-    display: 'block',
-    fontSize: '1.4rem',
-    fontWeight: '700',
-    color: '#1f2937',
-  },
-  
-  metricLabel: {
-    display: 'block',
-    fontSize: '0.8rem',
-    color: '#6b7280',
-    marginTop: '4px',
-  },
-  
-  windQuality: {
-    display: 'inline-block',
-    padding: '4px 8px',
-    borderRadius: '12px',
-    fontSize: '0.8rem',
-    fontWeight: '600',
-    color: 'white',
-    marginTop: '8px',
-  },
-  
-  impactGrid: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: '8px',
-    fontSize: '0.9rem',
-    lineHeight: '1.4',
-  },
-  
-  scoreContainer: {
-    display: 'flex',
-    alignItems: 'center',
-  },
-  
-  scoreCircle: {
-    width: '50px',
-    height: '50px',
-    borderRadius: '50%',
-    border: '3px solid',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '1.2rem',
-    fontWeight: '700',
-    color: '#1f2937',
-    background: 'white',
-  },
-  
-  suggestedGrid: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '12px',
-  },
-  
-  windMetric: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px',
-    padding: '12px',
-    background: '#f0f9ff',
-    borderRadius: '8px',
-  },
-  
-  windSpeed: {
-    fontSize: '1.6rem',
-    fontWeight: '700',
-    color: '#1f2937',
-  },
-  
-  potentialMetrics: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: '8px',
-    fontSize: '0.9rem',
-    lineHeight: '1.4',
-  },
-  
-  advantagesList: {
-    padding: '12px',
-    background: '#f0fdf4',
-    borderRadius: '8px',
-  },
-  
-  advantage: {
-    fontSize: '0.9rem',
-    color: '#059669',
-    marginBottom: '4px',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px',
-  },
-  
-  technicalDetails: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: '6px',
     fontSize: '0.85rem',
-    color: '#6b7280',
-  },
-  
-  weatherPopup: {
-    minWidth: '250px',
-  },
-  
-  weatherGrid: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: '8px',
-    fontSize: '0.9rem',
-    marginTop: '10px',
-  },
-  
-  userPopup: {
-    minWidth: '280px',
-  },
-  
-  assessmentGrid: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '6px',
-    fontSize: '0.9rem',
-    marginTop: '10px',
-  },
-  
-  infoPanel: {
-    background: 'rgba(255, 255, 255, 0.95)',
-    backdropFilter: 'blur(10px)',
-    margin: '0 20px 20px 20px',
-    padding: '20px',
-    borderRadius: '16px',
-    boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
-  },
-  
-  infoPanelContent: {
-    maxWidth: '1200px',
-    margin: '0 auto',
-  },
-  
-  featureGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-    gap: '20px',
-    marginTop: '15px',
-  },
-  
-  feature: {
-    display: 'flex',
-    alignItems: 'flex-start',
-    gap: '12px',
-  },
-  
-  featureIcon: {
-    fontSize: '1.5rem',
-    padding: '8px',
-    borderRadius: '8px',
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    color: 'white',
-    display: 'block',
-    minWidth: '40px',
-    textAlign: 'center',
+    cursor: 'pointer',
+    backdropFilter: 'blur(12px)',
+    transition: 'all 0.3s ease',
   },
 }
