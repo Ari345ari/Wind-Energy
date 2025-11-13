@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import React, { useState, useCallback, useRef, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import './App.css';
@@ -272,7 +272,7 @@ function MongoliaWindMap() {
   const [loading, setLoading] = useState(false);
   const [activeLayer, setActiveLayer] = useState('satellite');
   const [error, setError] = useState(null);
-  const [uiVisible, setUiVisible] = useState(true);
+  //const [uiVisible, setUiVisible] = useState(true);
   const [filterMinCapacity, setFilterMinCapacity] = useState(0);
   const [savedAssessments, setSavedAssessments] = useState([]);
   const [showComparison, setShowComparison] = useState(false);
@@ -297,7 +297,7 @@ function MongoliaWindMap() {
         throw new Error('No wind data available');
       }
       
-      const dailyWindSpeedsMax = data.daily.wind_speed_10m_max;
+     // const dailyWindSpeedsMax = data.daily.wind_speed_10m_max;
       const dailyWindSpeedsMean = data.daily.wind_speed_10m_mean;
       const timestamps = data.daily.time;
       
