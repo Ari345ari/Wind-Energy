@@ -2,6 +2,7 @@ import React, { useState, useCallback, useRef, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import './App.css';
+import { Analytics } from "@vercel/analytics/react"
 
 
 delete L.Icon.Default.prototype._getIconUrl;
