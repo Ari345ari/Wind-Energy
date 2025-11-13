@@ -272,7 +272,7 @@ function MongoliaWindMap() {
   const [loading, setLoading] = useState(false);
   const [activeLayer, setActiveLayer] = useState('satellite');
   const [error, setError] = useState(null);
-  //const [uiVisible, setUiVisible] = useState(true);
+  const [uiVisible, setUiVisible] = useState(true);
   const [filterMinCapacity, setFilterMinCapacity] = useState(0);
   const [savedAssessments, setSavedAssessments] = useState([]);
   const [showComparison, setShowComparison] = useState(false);
