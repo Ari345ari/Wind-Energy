@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents, Circle, Polyline } from 'react-leaflet';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
+import './App.css';
 
-// Fix for default markers in react-leaflet
+
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.3/images/marker-icon-2x.png',
@@ -10,410 +11,521 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.3/images/marker-shadow.png',
 });
 
-// Custom icons with modern design
 const createIcon = (color, symbol) => new L.Icon({
-    iconUrl: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
-      <svg width="32" height="48" viewBox="0 0 32 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M16 0C24.8366 0 32 7.16344 32 16C32 24.8366 16 48 16 48C16 48 0 24.8366 0 16C0 7.16344 7.16344 0 16 0Z" fill="${color}"/>
-        <circle cx="16" cy="16" r="10" fill="white"/>
-        <text x="16" y="20" text-anchor="middle" font-size="12" fill="${color}">${symbol}</text>
-      </svg>
-    `)}`,
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.3/images/marker-shadow.png',
-    iconSize: [32, 48],
-    iconAnchor: [16, 48],
-    popupAnchor: [0, -48],
-    shadowSize: [48, 48],
-  });
+  iconUrl: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
+    <svg width="32" height="48" viewBox="0 0 32 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M16 0C24.8366 0 32 7.16344 32 16C32 24.8366 16 48 16 48C16 48 0 24.8366 0 16C0 7.16344 7.16344 0 16 0Z" fill="${color}"/>
+      <circle cx="16" cy="16" r="10" fill="white"/>
+      <text x="16" y="20" text-anchor="middle" font-size="12" fill="${color}">${symbol}</text>
+    </svg>
+  `)}`,
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.3/images/marker-shadow.png',
+  iconSize: [32, 48],
+  iconAnchor: [16, 48],
+  popupAnchor: [0, -48],
+  shadowSize: [48, 48],
+});
 
 const turbineIcon = createIcon('#3b82f6', '⚡');
-const suggestedIcon = createIcon('#10b981', '★');
 const userIcon = createIcon('#ef4444', '📍');
-const weatherIcon = createIcon('#f59e0b', '☁');
 
-// Real Mongolian wind farm data with updated information
+// Constants
+const USD_TO_MNT = 3450;
+const FINANCIAL_PARAMS = {
+  bookLife: 25,
+  discountRate: 0.08,
+  overnightCapitalCost: 1500,
+  fixedOM: 40,
+  variableOM: 0.01,
+};
+
 const windFarms = [
   {
     id: 1,
-    position: [44.915778, 110.237611],
-    name: 'Sainshand Wind Farm',
-    capacity: 55,
-    turbines: 25,
-    turbineModel: 'Goldwind GW82/2200',
-    unitCapacity: 2.2,
-    yearCompleted: 2018,
-    operator: 'Newcom Group',
-    status: 'Operational',
-    annualProduction: 132, // GWh
-    capacityFactor: 27.4,
-    avgWindSpeed: 7.2,
-    coordinates: '44°54\'57"N 110°14\'15"E',
-    gridConnection: 'South Gobi Grid',
-    investment: 120, // Million USD
-  },
-  {
-    id: 2,
-    position: [47.565, 107.206500],
+    position: [47.570583, 107.220417],
     name: 'Salkhit Wind Farm',
     capacity: 49.6,
     turbines: 31,
-    turbineModel: 'Vestas V80',
-    unitCapacity: 1.6,
     yearCompleted: 2013,
-    operator: 'CleanTech Energy Corp',
     status: 'Operational',
-    annualProduction: 115,
-    capacityFactor: 26.5,
-    avgWindSpeed: 6.8,
-    coordinates: '47°33\'54"N 107°12\'23"E',
-    gridConnection: 'Central Grid',
-    investment: 98,
+    annualProduction: 168.5,
   },
   {
-    id: 3,
+    id: 2,
     position: [43.559833, 105.613500],
     name: 'Tsetsii Wind Farm',
     capacity: 50,
     turbines: 25,
-    turbineModel: 'Goldwind GW87/2000',
-    unitCapacity: 2.0,
     yearCompleted: 2017,
-    operator: 'Saikhan Ovoo Energy',
     status: 'Operational',
-    annualProduction: 125,
-    capacityFactor: 28.5,
-    avgWindSpeed: 7.0,
-    coordinates: '43°33\'35"N 105°36\'49"E',
-    gridConnection: 'South Grid',
-    investment: 105,
+    annualProduction: 150,
   },
   {
-    id: 4,
-    position: [45.123456, 111.789012],
-    name: 'Khongor Wind Farm',
-    capacity: 75,
-    turbines: 30,
-    turbineModel: 'Vestas V90',
-    unitCapacity: 2.5,
-    yearCompleted: 2020,
-    operator: 'Mongolia Wind Power',
+    id: 3,
+    position: [44.915778, 110.237611],
+    name: 'Sainshand Wind Farm',
+    capacity: 55,
+    turbines: 25,
+    yearCompleted: 2018,
     status: 'Operational',
-    annualProduction: 180,
-    capacityFactor: 27.4,
-    avgWindSpeed: 7.5,
-    coordinates: '45°07\'24"N 111°47\'20"E',
-    gridConnection: 'Eastern Grid',
-    investment: 158,
+    annualProduction: 190,
   },
 ];
 
-// Enhanced suggested locations with detailed analysis
-const suggestedLocations = [
-  {
-    id: 'sg1',
-    position: [45.2, 108.5],
-    name: 'South Gobi Corridor Alpha',
-    avgWindSpeed: 8.4,
-    potential: 'Exceptional',
-    estimatedCapacity: 300,
-    lcoe: 0.045, // USD per kWh
-    score: 96,
-    terrain: 'Flat desert plains',
-    elevation: 1200,
-    accessRoad: 'Good - 15km to highway',
-    gridDistance: '8km to existing substation',
-    environmentalRisk: 'Low',
-    advantages: ['Highest wind speeds in region', 'Excellent grid access', 'Minimal environmental constraints'],
-    windDirection: 'NW-SE (predominant)',
-    turbulence: 'Low',
-    icing: 'Minimal risk',
-  },
-  {
-    id: 'sg2',
-    position: [46.1, 111.8],
-    name: 'Eastern Steppe Complex',
-    avgWindSpeed: 7.9,
-    potential: 'Excellent',
-    estimatedCapacity: 250,
-    lcoe: 0.052,
-    score: 91,
-    terrain: 'Rolling hills',
-    elevation: 980,
-    accessRoad: 'Moderate - 25km to highway',
-    gridDistance: '12km to transmission line',
-    environmentalRisk: 'Low-Medium',
-    advantages: ['Consistent wind patterns', 'Large available area', 'Good seasonal variation'],
-    windDirection: 'W-E (dominant)',
-    turbulence: 'Low-Medium',
-    icing: 'Low risk',
-  },
-  {
-    id: 'sg3',
-    position: [49.2, 106.3],
-    name: 'Northern Plains Hub',
-    avgWindSpeed: 7.6,
-    potential: 'Very Good',
-    estimatedCapacity: 200,
-    lcoe: 0.058,
-    score: 87,
-    terrain: 'Open plains',
-    elevation: 750,
-    accessRoad: 'Good - 12km to highway',
-    gridDistance: '18km to substation',
-    environmentalRisk: 'Medium',
-    advantages: ['Cross-border potential', 'Good infrastructure', 'Stable wind resource'],
-    windDirection: 'SW-NE (seasonal)',
-    turbulence: 'Medium',
-    icing: 'Medium risk (winter)',
-  },
-  {
-    id: 'sg4',
-    position: [44.8, 104.2],
-    name: 'Altai Foothills Premium',
-    avgWindSpeed: 8.1,
-    potential: 'Excellent',
-    estimatedCapacity: 280,
-    lcoe: 0.049,
-    score: 94,
-    terrain: 'Gentle slopes',
-    elevation: 1450,
-    accessRoad: 'Challenging - 35km to highway',
-    gridDistance: '22km to transmission line',
-    environmentalRisk: 'Medium-High',
-    advantages: ['Orographic enhancement', 'Year-round consistency', 'High capacity factor'],
-    windDirection: 'Variable (mountain influenced)',
-    turbulence: 'Medium-High',
-    icing: 'Medium risk',
-  },
+const gridLocations = [
+  { lat: 47.92, lon: 106.92 },
+  { lat: 44.915778, lon: 110.237611 },
+  { lat: 43.559833, lon: 105.613500 },
 ];
 
-// Weather stations for real-time data simulation
-const weatherStations = [
-  {
-    id: 'ws1',
-    position: [47.9077, 106.8832], // Ulaanbaatar
-    name: 'Ulaanbaatar Weather Station',
-    currentWindSpeed: 5.2,
-    currentDirection: 'SW',
-    temperature: -12,
-    humidity: 68,
-    pressure: 1018,
-    visibility: 'Good',
-  },
-  {
-    id: 'ws2',
-    position: [44.3547, 110.0086], // Sainshand
-    name: 'Sainshand Weather Station',
-    currentWindSpeed: 7.8,
-    currentDirection: 'NW',
-    temperature: -8,
-    humidity: 45,
-    pressure: 1022,
-    visibility: 'Excellent',
-  },
-  {
-    id: 'ws3',
-    position: [46.2642, 107.7236], // Choir
-    name: 'Choir Weather Station',
-    currentWindSpeed: 6.3,
-    currentDirection: 'W',
-    temperature: -15,
-    humidity: 72,
-    pressure: 1015,
-    visibility: 'Good',
-  },
-];
-
-// Advanced calculations
-const calculateAdvancedMetrics = (capacity, windSpeed, turbines) => {
-  const capacityFactor = Math.min((windSpeed / 12) * 0.35 + 0.15, 0.45);
-  const annualProduction = capacity * 8760 * capacityFactor / 1000; // GWh
-  const co2Avoided = annualProduction * 0.85; // tons CO2 per year
-  const householdsSupplied = Math.round(annualProduction * 1000 / 3.5); // Average household consumption
+// grid distance calculations
+const createGridDistanceCalculator = () => {
+  const cache = new Map();
   
-  return {
-    capacityFactor: (capacityFactor * 100).toFixed(1),
-    annualProduction: annualProduction.toFixed(1),
-    co2Avoided: co2Avoided.toFixed(0),
-    householdsSupplied: householdsSupplied.toLocaleString(),
-    currentOutput: (capacity * capacityFactor).toFixed(1),
+  return (lat, lon) => {
+    const key = `${lat.toFixed(3)},${lon.toFixed(3)}`;
+    if (cache.has(key)) return cache.get(key);
+    
+    let minDistance = Infinity;
+    gridLocations.forEach(grid => {
+      const R = 6371;
+      const dLat = (grid.lat - lat) * Math.PI / 180;
+      const dLon = (grid.lon - lon) * Math.PI / 180;
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat * Math.PI / 180) * Math.cos(grid.lat * Math.PI / 180) *
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      const distance = R * c;
+      if (distance < minDistance) minDistance = distance;
+    });
+    
+    cache.set(key, minDistance);
+    return minDistance;
   };
 };
 
-const calculateLCOE = (windSpeed, distance) => {
-  const baseLCOE = 0.055;
-  const windFactor = Math.max(0.8, windSpeed / 8.5);
-  const distanceFactor = 1 + (distance / 100) * 0.1;
-  return (baseLCOE / windFactor * distanceFactor).toFixed(3);
+const calculateCapacityFactor = (avgWindSpeed) => {
+  const points = [
+    { speed: 4, cf: 0.15 },
+    { speed: 6, cf: 0.25 },
+    { speed: 7, cf: 0.32 },
+    { speed: 8, cf: 0.38 },
+    { speed: 9, cf: 0.42 },
+    { speed: 10, cf: 0.45 }
+  ];
+  
+  if (avgWindSpeed <= points[0].speed) return points[0].cf;
+  if (avgWindSpeed >= points[points.length - 1].speed) return points[points.length - 1].cf;
+  
+  for (let i = 0; i < points.length - 1; i++) {
+    if (avgWindSpeed >= points[i].speed && avgWindSpeed <= points[i + 1].speed) {
+      const ratio = (avgWindSpeed - points[i].speed) / (points[i + 1].speed - points[i].speed);
+      return points[i].cf + ratio * (points[i + 1].cf - points[i].cf);
+    }
+  }
+  
+  return 0.30;
+};
+
+const calculateCRF = (interestRate, periods) => {
+  const numerator = interestRate * Math.pow(1 + interestRate, periods);
+  const denominator = Math.pow(1 + interestRate, periods) - 1;
+  return numerator / denominator;
+};
+
+const calculateLCOE = (capacityFactor, gridDistance) => {
+  const crf = calculateCRF(FINANCIAL_PARAMS.discountRate, FINANCIAL_PARAMS.bookLife);
+  const transmissionCost = gridDistance * 1.2;
+  const totalCapitalCost = FINANCIAL_PARAMS.overnightCapitalCost + transmissionCost;
+  const numerator = (totalCapitalCost * crf) + FINANCIAL_PARAMS.fixedOM;
+  const denominator = 8760 * capacityFactor;
+  return (numerator / denominator) + FINANCIAL_PARAMS.variableOM;
 };
 
 const getWindQuality = (speed) => {
-  if (speed >= 8) return { quality: 'Exceptional', color: '#10b981', rating: 'A+' };
-  if (speed >= 7) return { quality: 'Excellent', color: '#3b82f6', rating: 'A' };
-  if (speed >= 6) return { quality: 'Very Good', color: '#f59e0b', rating: 'B+' };
-  if (speed >= 5) return { quality: 'Good', color: '#ef4444', rating: 'B' };
-  return { quality: 'Poor', color: '#6b7280', rating: 'C' };
+  if (speed >= 8) return { quality: 'Exceptional', color: '#10b981' };
+  if (speed >= 7) return { quality: 'Excellent', color: '#3b82f6' };
+  if (speed >= 6) return { quality: 'Very Good', color: '#f59e0b' };
+  if (speed >= 5) return { quality: 'Good', color: '#ef4444' };
+  return { quality: 'Poor', color: '#6b7280' };
 };
 
-// Component to handle map interactions
-function MapController({ onMapClick, selectedLocation }) {
-  useMapEvents({
-    click(e) {
-      onMapClick(e.latlng);
-    },
-  });
-  return null;
-}
+//debounce
+const useDebounce = (callback, delay) => {
+  const timeoutRef = useRef(null);
+  return useCallback((...args) => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => callback(...args), delay);
+  }, [callback, delay]);
+};
 
-// Main component
-export default function EnhancedWindMap() {
-  const [selectedLocation, setSelectedLocation] = useState(null);
-  const [showSuggested, setShowSuggested] = useState(false);
-  const [showWeather, setShowWeather] = useState(false);
-  const [showWindZones, setShowWindZones] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [activeLayer, setActiveLayer] = useState('satellite');
-  const [filterMinCapacity, setFilterMinCapacity] = useState(0);
-  const [headerVisible, setHeaderVisible] = useState(false);
-
-  // Simulate weather data updates
-  useEffect(() => {
-    const interval = setInterval(() => {
-      // Simulate real-time weather updates
-      weatherStations.forEach(station => {
-        station.currentWindSpeed += (Math.random() - 0.5) * 0.5;
-        station.currentWindSpeed = Math.max(0, Math.min(15, station.currentWindSpeed));
-      });
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  const handleMapClick = (latlng) => {
-    setLoading(true);
+// wind farm popup
+const WindFarmPopup = ({ farm }) => (
+  <div className="popup-content">
+    <div className="popup-header">
+      <h3 className="popup-title">⚡ {farm.name}</h3>
+      <span className="status-badge">{farm.status}</span>
+    </div>
     
-    // Simulate API call delay
-    setTimeout(() => {
-      const estimatedWindSpeed = 4 + Math.abs(latlng.lat - 46) * 0.3 + Math.random() * 2;
-      const nearestGrid = Math.sqrt(Math.pow(latlng.lat - 47, 2) + Math.pow(latlng.lng - 107, 2)) * 50;
-      
-      setSelectedLocation({
-        position: [latlng.lat, latlng.lng],
-        name: `Assessment Point`,
-        coordinates: `${latlng.lat.toFixed(4)}°N ${latlng.lng.toFixed(4)}°E`,
-        avgWindSpeed: estimatedWindSpeed,
-        estimatedCapacity: Math.round(estimatedWindSpeed * 25),
-        lcoe: calculateLCOE(estimatedWindSpeed, nearestGrid),
-        gridDistance: nearestGrid.toFixed(1),
-        terrain: 'Mixed terrain',
-        elevation: Math.round(800 + Math.random() * 600),
-        accessibilityScore: Math.round(60 + Math.random() * 30),
-        timestamp: new Date().toLocaleTimeString(),
-      });
-      setLoading(false);
-    }, 800);
-  };
-
-  const toggleLayer = (layerType) => {
-    setActiveLayer(layerType);
-  };
-
-  const filteredWindFarms = windFarms.filter(farm => farm.capacity >= filterMinCapacity);
-
-  return (
-    <div style={styles.container}>
-      {/* Hover-activated Header */}
-      <div 
-        style={{
-          ...styles.hoverZone,
-          ...(headerVisible ? styles.hoverZoneActive : {})
-        }}
-        onMouseEnter={() => setHeaderVisible(true)}
-        onMouseLeave={() => setHeaderVisible(false)}
-      >
-        <div style={styles.header}>
-  <div style={styles.titleContainer}>
-    <h1 style={styles.title}>Mongolia Wind Energy Intelligence Platform</h1>
+    <div className="popup-section">
+      <div className="info-grid">
+        <div><strong>Capacity:</strong> {farm.capacity} MW</div>
+        <div><strong>Turbines:</strong> {farm.turbines}</div>
+        <div><strong>Year:</strong> {farm.yearCompleted}</div>
+        <div><strong>Output:</strong> {farm.annualProduction} GWh/year</div>
+      </div>
+    </div>
   </div>
-  <p style={styles.subtitle}>Advanced wind resource assessment and energy planning tool</p>
+);
+
+//assessment popup
+const AssessmentPopup = ({ location, onSave, isSaved }) => {
+  const windQuality = getWindQuality(location.avgWindSpeed);
   
-  <div style={styles.statsRow}>
-    <div style={styles.statBox}>
-      <span style={styles.statValue}>229.6 MW</span>
-      <span style={styles.statLabel}>Installed</span>
-    </div>
-    <div style={styles.statBox}>
-      <span style={styles.statValue}>4</span>
-      <span style={styles.statLabel}>Active Farms</span>
-    </div>
-    <div style={styles.statBox}>
-      <span style={styles.statValue}>4</span>
-      <span style={styles.statLabel}>Prime Locations</span>
-    </div>
-  </div>
-</div>
-
-
-        {/* Control Panel */}
-        <div style={{
-          ...styles.controlPanel,
-          ...(headerVisible ? styles.controlPanelVisible : {})
-        }}>
-          <div style={styles.controlGroup}>
-            <button
-              onClick={() => setShowSuggested(!showSuggested)}
-              style={{...styles.controlBtn, ...(showSuggested ? styles.controlBtnActive : {})}}
-            >
-              ⭐ Prime Locations
-            </button>
-            
-            <button
-              onClick={() => setShowWeather(!showWeather)}
-              style={{...styles.controlBtn, ...(showWeather ? styles.controlBtnActive : {})}}
-            >
-              🌤️ Weather Stations
-            </button>
-            
-            <button
-              onClick={() => setShowWindZones(!showWindZones)}
-              style={{...styles.controlBtn, ...(showWindZones ? styles.controlBtnActive : {})}}
-            >
-              💨 Wind Zones
-            </button>
-          </div>
-
-          <div style={styles.controlGroup}>
-            <select
-              value={activeLayer}
-              onChange={(e) => toggleLayer(e.target.value)}
-              style={styles.layerSelect}
-            >
-              <option value="street">Street Map</option>
-              <option value="satellite">Satellite</option>
-              <option value="terrain">Terrain</option>
-            </select>
-            
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value={filterMinCapacity}
-              onChange={(e) => setFilterMinCapacity(Number(e.target.value))}
-              style={styles.slider}
-            />
-            <span style={styles.filterLabel}>Min: {filterMinCapacity}MW</span>
-          </div>
+  return (
+    <div className="popup-content">
+      <div className="popup-header">
+        <h4 className="assessment-title">📍 Site Assessment</h4>
+        {!isSaved && (
+          <button 
+            onClick={() => onSave(location)}
+            className="save-btn"
+            title="Save for comparison"
+          >
+            💾 Save
+          </button>
+        )}
+      </div>
+      
+      <div className="popup-section">
+        <div className="info-grid">
+          <div><strong>Location:</strong> {location.coordinates}</div>
+          <div><strong>Wind Speed:</strong> {location.avgWindSpeed.toFixed(1)} m/s</div>
+          <div><strong>Wind Quality:</strong> <span style={{ color: windQuality.color, fontWeight: 600 }}>{windQuality.quality}</span></div>
+          <div><strong>Capacity Factor:</strong> {location.capacityFactor}%</div>
+          <div><strong>Est. Capacity:</strong> {location.estimatedCapacity} MW</div>
         </div>
       </div>
 
-      {/* Map Container */}
-      <div style={styles.mapWrapper}>
+      <div className="popup-section">
+        <h5 className="section-title">Economics</h5>
+        <div className="info-grid">
+          <div><strong>LCOE:</strong> ${location.lcoeUSD}/kWh (₮{location.lcoeMNT}/kWh)</div>
+        </div>
+      </div>
+
+      <div className="popup-section">
+        <h5 className="section-title">Grid Connectivity</h5>
+        <div className="info-grid">
+          <div><strong>Distance:</strong> {location.gridDistance} km</div>
+          <div><strong>Feasibility:</strong> <span style={{ 
+            color: location.gridFeasibility === 'Excellent' ? '#10b981' : 
+                   location.gridFeasibility === 'Good' ? '#3b82f6' :
+                   location.gridFeasibility === 'Fair' ? '#f59e0b' : '#ef4444',
+            fontWeight: 600 
+          }}>{location.gridFeasibility}</span></div>
+          <div style={{ fontSize: '0.8rem', color: '#6b7280', fontStyle: 'italic' }}>{location.gridNotes}</div>
+        </div>
+      </div>
+      
+      {location.monthlyTrends && location.monthlyTrends.length > 0 && (
+        <div className="popup-section">
+          <h5 className="section-title">Wind Trends (30 days)</h5>
+          <div className="mini-chart">
+            {location.monthlyTrends.map((trend, idx) => (
+              <div key={idx} className="trend-bar">
+                <div 
+                  className="trend-fill"
+                  style={{ 
+                    width: `${(trend.avg / 12) * 100}%`,
+                    background: `linear-gradient(90deg, #3b82f6, #2563eb)`
+                  }}
+                />
+                <span className="trend-label">{trend.month.substring(5)}: {trend.avg.toFixed(1)} m/s</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+function MapController({ onMapClick }) {
+  const abortControllerRef = useRef(null);
+  
+  useMapEvents({
+    click(e) {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      abortControllerRef.current = new AbortController();
+      onMapClick(e.latlng, abortControllerRef.current);
+    },
+  });
+  
+  return null;
+}
+
+function MongoliaWindMap() {
+  const [selectedLocation, setSelectedLocation] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [activeLayer, setActiveLayer] = useState('satellite');
+  const [error, setError] = useState(null);
+  const [uiVisible, setUiVisible] = useState(true);
+  const [filterMinCapacity, setFilterMinCapacity] = useState(0);
+  const [savedAssessments, setSavedAssessments] = useState([]);
+  const [showComparison, setShowComparison] = useState(false);
+  
+  const calculateGridDistance = useMemo(() => createGridDistanceCalculator(), []);
+
+  const debouncedMapClick = useDebounce(async (latlng, abortController) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const res = await fetch(
+        `https://api.open-meteo.com/v1/forecast?latitude=${latlng.lat}&longitude=${latlng.lng}&daily=wind_speed_10m_max,wind_speed_10m_mean&current=wind_speed_10m&past_days=30&forecast_days=7&timezone=auto`,
+        { signal: abortController?.signal }
+      );
+      
+      if (!res.ok) throw new Error(`API error: ${res.status}`);
+      
+      const data = await res.json();
+      
+      if (!data.daily?.wind_speed_10m_max) {
+        throw new Error('No wind data available');
+      }
+      
+      const dailyWindSpeedsMax = data.daily.wind_speed_10m_max;
+      const dailyWindSpeedsMean = data.daily.wind_speed_10m_mean;
+      const timestamps = data.daily.time;
+      
+      //avg from data
+      const recentData = dailyWindSpeedsMean.slice(-30);
+      const avgWindSpeed = recentData.reduce((a, b) => a + b, 0) / recentData.length;
+      
+      //monthly avg for trends
+      const monthlyAvg = {};
+      timestamps.forEach((time, idx) => {
+        const month = time.substring(0, 7); // y + m
+        if (!monthlyAvg[month]) monthlyAvg[month] = [];
+        monthlyAvg[month].push(dailyWindSpeedsMean[idx]);
+      });
+      
+      const monthlyTrends = Object.entries(monthlyAvg).map(([month, speeds]) => ({
+        month,
+        avg: speeds.reduce((a, b) => a + b, 0) / speeds.length
+      }));
+      
+      const gridDistance = calculateGridDistance(latlng.lat, latlng.lng);
+      const capacityFactor = calculateCapacityFactor(avgWindSpeed);
+      const estimatedCapacity = Math.round(avgWindSpeed * 30);
+      const lcoeUSD = calculateLCOE(capacityFactor, gridDistance);
+      
+      let gridFeasibility = 'Good';
+      let gridNotes = 'Reasonable connection distance';
+      if (gridDistance > 200) {
+        gridFeasibility = 'Poor';
+        gridNotes = 'Very remote - high transmission costs';
+      } else if (gridDistance > 100) {
+        gridFeasibility = 'Fair';
+        gridNotes = 'Moderate distance - consider substation';
+      } else if (gridDistance < 30) {
+        gridFeasibility = 'Excellent';
+        gridNotes = 'Close proximity to grid';
+      }
+      
+      const assessment = {
+        id: Date.now(),
+        position: [latlng.lat, latlng.lng],
+        coordinates: `${latlng.lat.toFixed(4)}°N ${latlng.lng.toFixed(4)}°E`,
+        avgWindSpeed,
+        estimatedCapacity,
+        capacityFactor: (capacityFactor * 100).toFixed(1),
+        lcoeUSD: lcoeUSD.toFixed(3),
+        lcoeMNT: (lcoeUSD * USD_TO_MNT).toFixed(0),
+        gridDistance: gridDistance.toFixed(1),
+        gridFeasibility,
+        gridNotes,
+        historicalData: dailyWindSpeedsMean.slice(-30),
+        timestamps: timestamps.slice(-30),
+        monthlyTrends,
+        savedAt: new Date().toISOString(),
+      };
+      
+      setSelectedLocation(assessment);
+    } catch (err) {
+      if (err.name === 'AbortError') {
+        console.log('Request aborted');
+        return;
+      }
+      console.error('Assessment failed:', err);
+      setError('Failed to assess location. Please try again.');
+      setTimeout(() => setError(null), 4000);
+    } finally {
+      setLoading(false);
+    }
+  }, 500);
+
+  const filteredWindFarms = windFarms.filter(farm => farm.capacity >= filterMinCapacity);
+  const totalCapacity = windFarms.reduce((sum, farm) => sum + farm.capacity, 0);
+
+  const handleSaveAssessment = (location) => {
+    if (savedAssessments.find(a => a.id === location.id)) return;
+    setSavedAssessments(prev => [...prev, location]);
+    setError('Assessment saved! ✓');
+    setTimeout(() => setError(null), 2000);
+  };
+
+  const handleRemoveAssessment = (id) => {
+    setSavedAssessments(prev => prev.filter(a => a.id !== id));
+  };
+
+  const handleClearAll = () => {
+    setSavedAssessments([]);
+    setShowComparison(false);
+  };
+
+  return (
+    <div 
+      className="wind-map-container"
+    >
+      {/* Error Banner */}
+      {error && (
+        <div className="error-banner" role="alert">
+          ⚠️ {error}
+        </div>
+      )}
+
+      {/* Header */}
+      <header className={`header-panel ${uiVisible ? 'visible' : 'hidden'}`}>
+        <div className="title-row">
+          <h1 className="main-title">🌬️ Mongolia Wind Energy</h1>
+          <span className="live-badge">Demo</span>
+        </div>
+        <p className="subtitle">Wind farm locations & site assessment</p>
+        
+        <div className="stats-grid">
+          <div className="stat-box">
+            <span className="stat-value">{totalCapacity.toFixed(1)}</span>
+            <span className="stat-label">MW Total</span>
+          </div>
+          <div className="stat-box">
+            <span className="stat-value">{windFarms.length}</span>
+            <span className="stat-label">Active Farms</span>
+          </div>
+          <div className="stat-box">
+            <span className="stat-value">Click Map</span>
+            <span className="stat-label">To Assess</span>
+          </div>
+        </div>
+      </header>
+
+      {/* Controls */}
+      <nav className={`controls-panel ${uiVisible ? 'visible' : 'hidden'}`}>
+        <div className="control-row">
+          <select
+            value={activeLayer}
+            onChange={(e) => setActiveLayer(e.target.value)}
+            className="layer-select"
+          >
+            <option value="street">Street Map</option>
+            <option value="satellite">Satellite</option>
+            <option value="terrain">Terrain</option>
+          </select>
+          
+          <div className="slider-container">
+            <input
+              type="range"
+              min="0"
+              max="60"
+              value={filterMinCapacity}
+              onChange={(e) => setFilterMinCapacity(Number(e.target.value))}
+              className="capacity-slider"
+            />
+            <span className="slider-label">Min: {filterMinCapacity}MW</span>
+          </div>
+          
+          {savedAssessments.length > 0 && (
+            <button
+              onClick={() => setShowComparison(!showComparison)}
+              className={`control-btn ${showComparison ? 'active' : ''}`}
+            >
+              📊 Compare ({savedAssessments.length})
+            </button>
+          )}
+        </div>
+      </nav>
+
+      {/* Comparison Panel */}
+      {showComparison && savedAssessments.length > 0 && (
+        <div className="comparison-panel">
+          <div className="comparison-header">
+            <h3>Site Comparison</h3>
+            <button onClick={handleClearAll} className="clear-all-btn">Clear All</button>
+          </div>
+          <div className="comparison-grid">
+            {savedAssessments.map((assessment) => {
+              const windQuality = getWindQuality(assessment.avgWindSpeed);
+              return (
+                <div key={assessment.id} className="comparison-card">
+                  <button 
+                    onClick={() => handleRemoveAssessment(assessment.id)}
+                    className="remove-btn"
+                    title="Remove"
+                  >
+                    ×
+                  </button>
+                  <div className="comparison-location">{assessment.coordinates}</div>
+                  <div className="comparison-stats">
+                    <div className="comp-stat">
+                      <span className="comp-label">Wind</span>
+                      <span className="comp-value" style={{ color: windQuality.color }}>
+                        {assessment.avgWindSpeed.toFixed(1)} m/s
+                      </span>
+                    </div>
+                    <div className="comp-stat">
+                      <span className="comp-label">CF</span>
+                      <span className="comp-value">{assessment.capacityFactor}%</span>
+                    </div>
+                    <div className="comp-stat">
+                      <span className="comp-label">LCOE</span>
+                      <span className="comp-value">${assessment.lcoeUSD}</span>
+                    </div>
+                    <div className="comp-stat">
+                      <span className="comp-label">Grid</span>
+                      <span className="comp-value">{assessment.gridDistance} km</span>
+                    </div>
+                    <div className="comp-stat">
+                      <span className="comp-label">Feasibility</span>
+                      <span className="comp-value" style={{ 
+                        color: assessment.gridFeasibility === 'Excellent' ? '#10b981' : 
+                               assessment.gridFeasibility === 'Good' ? '#3b82f6' :
+                               assessment.gridFeasibility === 'Fair' ? '#f59e0b' : '#ef4444',
+                        fontSize: '0.75rem'
+                      }}>
+                        {assessment.gridFeasibility}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Map */}
+      <div className="map-wrapper">
         <MapContainer
           center={[46.8625, 103.8467]}
           zoom={6}
-          style={styles.map}
-          zoomControl={false}
+          style={{ height: '100%', width: '100%' }}
+          zoomControl={true}
         >
+          <MapController onMapClick={debouncedMapClick} />
+          
           <TileLayer
             url={
               activeLayer === 'satellite'
@@ -422,346 +534,49 @@ export default function EnhancedWindMap() {
                 ? 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png'
                 : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
             }
-            attribution={
-              activeLayer === 'satellite'
-                ? '© Esri WorldImagery'
-                : activeLayer === 'terrain'
-                ? '© OpenTopoMap'
-                : '© OpenStreetMap'
-            }
+            attribution="© Map Data"
           />
 
-          <MapController onMapClick={handleMapClick} selectedLocation={selectedLocation} />
-
-          {/* Wind farms with enhanced popups */}
-          {filteredWindFarms.map((farm) => {
-            const metrics = calculateAdvancedMetrics(farm.capacity, farm.avgWindSpeed, farm.turbines);
-            const windQuality = getWindQuality(farm.avgWindSpeed);
-            
-            return (
-              <Marker key={farm.id} position={farm.position} icon={turbineIcon}>
-                <Popup maxWidth={400} className="custom-popup" autoClose={false} closeOnClick={false}>
-                  <div style={styles.popupContent}>
-                    <div style={styles.popupHeader}>
-                      <h3 style={styles.popupTitle}>⚡ {farm.name}</h3>
-                      <div style={{...styles.statusBadge, backgroundColor: '#10b981'}}>
-                        {farm.status}
-                      </div>
-                    </div>
-                    
-                    <div style={styles.popupGrid}>
-                      <div style={styles.popupSection}>
-                        <h4 style={styles.sectionTitle}>Technical Specs</h4>
-                        <div style={styles.specGrid}>
-                          <div><strong>Capacity:</strong> {farm.capacity} MW</div>
-                          <div><strong>Turbines:</strong> {farm.turbines} × {farm.unitCapacity}MW</div>
-                          <div><strong>Model:</strong> {farm.turbineModel}</div>
-                          <div><strong>Completed:</strong> {farm.yearCompleted}</div>
-                        </div>
-                      </div>
-
-                      <div style={styles.popupSection}>
-                        <h4 style={styles.sectionTitle}>Performance</h4>
-                        <div style={styles.metricsGrid}>
-                          <div style={styles.metric}>
-                            <span style={styles.metricValue}>{farm.avgWindSpeed.toFixed(1)} m/s</span>
-                            <span style={styles.metricLabel}>Avg Wind Speed</span>
-                            <div style={{...styles.windQuality, backgroundColor: windQuality.color}}>
-                              {windQuality.rating}
-                            </div>
-                          </div>
-                          <div style={styles.metric}>
-                            <span style={styles.metricValue}>{metrics.capacityFactor}%</span>
-                            <span style={styles.metricLabel}>Capacity Factor</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div style={styles.popupSection}>
-                        <h4 style={styles.sectionTitle}>Impact</h4>
-                        <div style={styles.impactGrid}>
-                          <div>🏠 {metrics.householdsSupplied} households</div>
-                          <div>🌱 {metrics.co2Avoided}t CO₂ avoided/year</div>
-                          <div>⚡ {metrics.annualProduction} GWh/year</div>
-                          <div>💰 ${farm.investment}M investment</div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </Popup>
-              </Marker>
-            );
-          })}
-
-          {/* Suggested locations */}
-          {showSuggested && suggestedLocations.map((location) => {
-            const windQuality = getWindQuality(location.avgWindSpeed);
-            
-            return (
-              <Marker key={location.id} position={location.position} icon={suggestedIcon}>
-                <Popup maxWidth={450} autoClose={false} closeOnClick={false}>
-                  <div style={styles.popupContent}>
-                    <div style={styles.popupHeader}>
-                      <h3 style={styles.popupTitle}>⭐ {location.name}</h3>
-                      <div style={styles.scoreContainer}>
-                        <div style={{...styles.scoreCircle, borderColor: windQuality.color}}>
-                          {location.score}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div style={styles.suggestedGrid}>
-                      <div style={styles.windMetric}>
-                        <span style={styles.windSpeed}>{location.avgWindSpeed.toFixed(1)} m/s</span>
-                        <span style={{...styles.windQuality, backgroundColor: windQuality.color}}>
-                          {windQuality.quality}
-                        </span>
-                      </div>
-
-                      <div style={styles.potentialMetrics}>
-                        <div><strong>Capacity:</strong> {location.estimatedCapacity} MW</div>
-                        <div><strong>LCOE:</strong> ${location.lcoe}/kWh</div>
-                        <div><strong>Elevation:</strong> {location.elevation}m</div>
-                        <div><strong>Grid:</strong> {location.gridDistance}</div>
-                      </div>
-
-                      <div style={styles.advantagesList}>
-                        <h4>Key Advantages:</h4>
-                        {location.advantages.map((advantage, idx) => (
-                          <div key={idx} style={styles.advantage}>
-                            ✓ {advantage}
-                          </div>
-                        ))}
-                      </div>
-
-                      <div style={styles.technicalDetails}>
-                        <div><strong>Terrain:</strong> {location.terrain}</div>
-                        <div><strong>Access:</strong> {location.accessRoad}</div>
-                        <div><strong>Wind Direction:</strong> {location.windDirection}</div>
-                        <div><strong>Environmental Risk:</strong> {location.environmentalRisk}</div>
-                      </div>
-                    </div>
-                  </div>
-                </Popup>
-              </Marker>
-            );
-          })}
-
-          {/* Weather stations */}
-          {showWeather && weatherStations.map((station) => (
-            <Marker key={station.id} position={station.position} icon={weatherIcon}>
-              <Popup autoClose={false} closeOnClick={false}>
-                <div style={styles.weatherPopup}>
-                  <h4>🌤️ {station.name}</h4>
-                  <div style={styles.weatherGrid}>
-                    <div><strong>Wind:</strong> {station.currentWindSpeed.toFixed(1)} m/s {station.currentDirection}</div>
-                    <div><strong>Temp:</strong> {station.temperature}°C</div>
-                    <div><strong>Humidity:</strong> {station.humidity}%</div>
-                    <div><strong>Pressure:</strong> {station.pressure} hPa</div>
-                    <div><strong>Visibility:</strong> {station.visibility}</div>
-                  </div>
-                </div>
+          {/* Wind Farms */}
+          {filteredWindFarms.map((farm) => (
+            <Marker key={farm.id} position={farm.position} icon={turbineIcon}>
+              <Popup maxWidth={350}>
+                <WindFarmPopup farm={farm} />
               </Popup>
             </Marker>
           ))}
 
-          {/* Wind zones visualization */}
-          {showWindZones && suggestedLocations.map((location) => (
-            <Circle
-              key={`zone-${location.id}`}
-              center={location.position}
-              radius={location.avgWindSpeed * 2000}
-              pathOptions={{
-                color: getWindQuality(location.avgWindSpeed).color,
-                fillColor: getWindQuality(location.avgWindSpeed).color,
-                fillOpacity: 0.1,
-                weight: 2,
-              }}
-            />
-          ))}
-
-          {/* User selected location */}
+          {/* User Assessment */}
           {selectedLocation && (
             <Marker position={selectedLocation.position} icon={userIcon}>
-              <Popup autoClose={false} closeOnClick={false}>
-                <div style={styles.userPopup}>
-                  <h4>📍 Wind Assessment</h4>
-                  <div style={styles.assessmentGrid}>
-                    <div><strong>Location:</strong> {selectedLocation.coordinates}</div>
-                    <div><strong>Wind Speed:</strong> {selectedLocation.avgWindSpeed.toFixed(1)} m/s</div>
-                    <div><strong>Potential:</strong> {selectedLocation.estimatedCapacity} MW</div>
-                    <div><strong>LCOE:</strong> ${selectedLocation.lcoe}/kWh</div>
-                    <div><strong>Grid Distance:</strong> {selectedLocation.gridDistance} km</div>
-                    <div><strong>Elevation:</strong> {selectedLocation.elevation}m</div>
-                    <div><strong>Assessed:</strong> {selectedLocation.timestamp}</div>
-                  </div>
-                  <div style={{...styles.windQuality, backgroundColor: getWindQuality(selectedLocation.avgWindSpeed).color, marginTop: '10px'}}>
-                    {getWindQuality(selectedLocation.avgWindSpeed).quality}
-                  </div>
-                </div>
+              <Popup maxWidth={400}>
+                <AssessmentPopup 
+                  location={selectedLocation} 
+                  onSave={handleSaveAssessment}
+                  isSaved={savedAssessments.some(a => a.id === selectedLocation.id)}
+                />
               </Popup>
             </Marker>
           )}
         </MapContainer>
 
-        {/* Loading overlay */}
+        {/* Loading */}
         {loading && (
-          <div style={styles.loadingOverlay}>
-            <div style={styles.loadingSpinner}>
-              <div style={styles.spinner}></div>
-              <p>Analyzing wind potential...</p>
+          <div className="loading-overlay">
+            <div className="loading-content">
+              <div className="spinner"></div>
+              <p>Analyzing wind data...</p>
             </div>
           </div>
         )}
       </div>
+
+      {/* Attribution */}
+      <footer className={`attribution ${uiVisible ? 'visible' : 'hidden'}`}>
+        Wind data: Open-Meteo API | Click anywhere to assess
+      </footer>
     </div>
   );
 }
-const styles = {
-  container: {
-    height: '100vh',
-    width: '100vw',
-    overflow: 'hidden',
-    position: 'relative',
-    background: '#000',
-  },
 
-  mapWrapper: {
-    position: 'absolute',
-    inset: 0,
-  },
-  header: {
-    position: 'absolute',
-    top: '20px',
-    left: '20px',
-    background: 'rgba(0,0,0,0.45)',
-    backdropFilter: 'blur(12px)',
-    border: '1px solid rgba(255,255,255,0.2)',
-    borderRadius: '12px',
-    padding: '16px 20px',
-    display: 'flex',
-    flexDirection: 'column',
-    width: '340px',  // wider header
-    gap: '12px',
-    color: 'white',
-    zIndex: 1000,
-    boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
-    transition: 'all 0.3s ease',
-  },
-  
-  titleContainer: {
-    display: 'flex',
-    flexDirection: 'row',   // title in row
-    alignItems: 'center',
-    gap: '8px',
-  },
-  
-  title: {
-    fontSize: '1.1rem',
-    fontWeight: '700',
-    margin: 0,
-    color: 'white',
-  },
-  
-  subtitle: {
-    fontSize: '0.85rem',
-    margin: 0,
-    color: '#d1d5db',
-  },
-  
-  statsRow: {
-    display: 'flex',
-    flexDirection: 'row',  // stats in a row
-    justifyContent: 'space-between',
-    gap: '12px',
-  },
-  
-  statBox: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-  },
-  
-  statValue: {
-    fontSize: '0.95rem',
-    fontWeight: '600',
-    color: 'white',
-  },
-  
-  statLabel: {
-    fontSize: '0.75rem',
-    color: '#d1d5db',
-    textTransform: 'uppercase',
-    marginTop: '2px',
-  },
-  
-
-  controlPanel: {
-    position: 'absolute',
-    bottom: '30px',
-    left: '30px',
-    display: 'flex',
-    flexDirection: 'row',
-    alignItems: 'center', 
-    gap: '12px',
-    zIndex: 1000,
-    flexWrap: 'nowrap',
-  },
-  
-  controlBtn: {
-    background: 'rgba(0,0,0,0.45)',          // dark glassy
-    backdropFilter: 'blur(12px)',
-    border: '1px solid rgba(255,255,255,0.2)',
-    borderRadius: '12px',
-    padding: '10px 16px',
-    color: 'white',
-    fontSize: '0.85rem',
-    fontWeight: '500',
-    cursor: 'pointer',
-    transition: 'all 0.3s ease',
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '6px',
-    boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-  },
-  
-  controlBtnActive: {
-    background: 'rgba(102,126,234,0.85)',
-    borderColor: 'rgba(102,126,234,0.9)',
-    color: 'white',
-    transform: 'translateY(-1px)',
-    boxShadow: '0 6px 20px rgba(102,126,234,0.35)',
-  },
-  
-  slider: {
-    width: '140px',
-    height: '6px',
-    borderRadius: '3px',
-    background: 'rgba(255,255,255,0.2)',
-    cursor: 'pointer',
-    outline: 'none',
-    transition: 'all 0.3s ease',
-  },
-  
-  sliderThumb: {
-    width: '16px',
-    height: '16px',
-    borderRadius: '50%',
-    background: 'rgba(102,126,234,0.9)',
-    border: '2px solid white',
-    cursor: 'pointer',
-    transition: 'all 0.2s ease',
-  },
-  
-  layerSelect: {
-    padding: '8px 12px',
-    borderRadius: '12px',
-    border: '1px solid rgba(255,255,255,0.2)',
-    background: 'rgba(0,0,0,0.45)',
-    color: 'white',
-    fontSize: '0.85rem',
-    cursor: 'pointer',
-    backdropFilter: 'blur(12px)',
-    transition: 'all 0.3s ease',
-  },
-}
+export default MongoliaWindMap;

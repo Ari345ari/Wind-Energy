@@ -1,70 +1,47 @@
-# Getting Started with Create React App
+Mongolia Wind Energy Map
+An interactive web application for visualizing existing wind farms in Mongolia
+and assessing potential wind energy sites with real-time meteorological data 
+and comprehensive economic analysis.
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+- Multiple Map Layers
+- Displays 3 operational wind farms in Mongolia with detailed specifications
 
-## Available Scripts
+Click anywhere on the map to instantly assess wind energy potential
+- 30 days of historical data + 7 day forecast from Open-Meteo API
+- Avg wind speeds with quality ratings
+- Capacity factor calculated using industry standard interpolation curves 
+- Levelized cost of energy LCOE in USD and MNT
+- Capital cost estimates
+- O & M cost projections
+- Distance calculation
+- 4 tier system rating
+- Recommendations with 
+    - <30km: excellent 
+    - 30 - 100km: good
+    - 100 - 200km: fair
+    - >200km: poor
+- Transmission cost estimation
+- Save multiple assessments 
+- Side by side comparison
 
-In the project directory, you can run:
+Sources 
+Wind data: Open-Meteo
+Map tiles 
+    - OpenStreetMap Contributors
+    - ArcGIS/Esri World Imagery
+    - OpenTopoMap
+    - Wind Farm Data: Based on publicly available information about
+    Mongolian wind projects
 
-### `npm start`
+Authors 
+Ariunjargal Ariunbold
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+Acknowledgements
+React-Leaflet community for excellent documentation
+Open-Meteo for providing free weather data API
+Mongolia's renewable energy sector for inspiration
+OpenStreetMap contributors for map data
+Claude.AI
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
-
-### `npm test`
-
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
-
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Note: This is a demo I made for curiosity. Not for professional use.
+Made with ❤️‍🩹 for Mongolia's renewable energy future
