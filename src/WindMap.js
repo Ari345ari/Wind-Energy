@@ -272,6 +272,7 @@ function MongoliaWindMap() {
   const [savedAssessments, setSavedAssessments] = useState([]);
   const [showComparison, setShowComparison] = useState(false);
   const [showInstructions, setShowInstructions] = useState(true);
+  const [showMethodology, setShowMethodology] = useState(false);
   
   const calculateGridDistance = useMemo(() => createGridDistanceCalculator(), []);
 
@@ -500,13 +501,106 @@ function MongoliaWindMap() {
           
           <button
             onClick={() => setShowInstructions(true)}
-            className="control-btn help-btn"
+            className="control-btn"
             title="Show instructions"
           >
             ❓ Help
           </button>
+          
+          <button
+            onClick={() => setShowMethodology(!showMethodology)}
+            className="control-btn"
+            title="Show methodology"
+          >
+            📖 Info
+          </button>
         </div>
       </nav>
+
+      {/* Methodology Panel */}
+      {showMethodology && (
+        <div className="methodology-panel">
+          <div className="methodology-header">
+            <h3>About WindScout</h3>
+            <button 
+              onClick={() => setShowMethodology(false)}
+              className="close-methodology-btn"
+              title="Close"
+            >
+              ×
+            </button>
+          </div>
+          
+          <div className="methodology-content">
+            <section className="method-section">
+              <h4>Purpose</h4>
+              <p>WindScout is a personal curiosity project exploring wind energy potential in Mongolia. It visualizes existing wind farms and provides preliminary site assessments based on real-time wind data. This is purely experimental and for learning purposes.</p>
+            </section>
+
+            <section className="method-section">
+              <h4>How Estimates Work</h4>
+              
+              <div className="method-item">
+                <strong>Wind Speed</strong>
+                <p>30-day average of actual wind measurements at 10m height from Open-Meteo API. Historical data shows seasonal patterns.</p>
+              </div>
+
+              <div className="method-item">
+                <strong>Wind Quality</strong>
+                <p>Simple classification based on average wind speed: ≥8 m/s (Exceptional), 7-8 m/s (Excellent), 6-7 m/s (Very Good), 5-6 m/s (Good), &lt;5 m/s (Poor).</p>
+              </div>
+
+              <div className="method-item">
+                <strong>Capacity Factor (CF)</strong>
+                <p>Rough estimate based on wind speed using simplified turbine performance curves. Higher wind speeds generally mean higher capacity factors.</p>
+              </div>
+
+              <div className="method-item">
+                <strong>Estimated Capacity</strong>
+                <p>Very rough estimate using wind speed × 30 MW. This is just a simple calculation and doesn't account for actual land availability, turbine selection, or environmental constraints.</p>
+              </div>
+
+              <div className="method-item">
+                <strong>LCOE (Levelized Cost of Energy)</strong>
+                <p>Simplified calculation considering capital costs ($1,500/kW), O&M ($40/kW/year + $0.01/kWh), transmission distance, 8% discount rate over 25 years, and capacity factor. Real costs vary significantly.</p>
+              </div>
+
+              <div className="method-item">
+                <strong>Grid Distance</strong>
+                <p>Straight-line distance to nearest major grid connection point (Ulaanbaatar, Sainshand, or Tsetsii). Actual routing would likely be different and longer.</p>
+              </div>
+
+              <div className="method-item">
+                <strong>Feasibility</strong>
+                <p>Basic rating by grid distance: &lt;30 km (Excellent), 30-100 km (Good), 100-200 km (Fair), &gt;200 km (Poor). This only considers distance, not actual grid capacity or infrastructure.</p>
+              </div>
+            </section>
+
+            <section className="method-section">
+              <h4>Data Sources</h4>
+              <ul>
+                <li><strong>Wind Data:</strong> Open-Meteo Weather API (real-time)</li>
+                <li><strong>Wind Farms:</strong> Public records of operational facilities</li>
+                <li><strong>Maps:</strong> OpenStreetMap, ESRI World Imagery</li>
+              </ul>
+            </section>
+
+            <section className="method-section disclaimer">
+              <h4>⚠️ Important Note</h4>
+              <p>This is a personal experimental project created out of curiosity. The estimates are simplified and should not be considered accurate or reliable. Real wind farm development requires:</p>
+              <ul>
+                <li>Multi-year wind measurements at hub height</li>
+                <li>Environmental impact assessments</li>
+                <li>Grid stability and interconnection studies</li>
+                <li>Land surveys and permitting</li>
+                <li>Detailed financial modeling</li>
+                <li>Professional engineering analysis</li>
+              </ul>
+              <p><strong>None of the data here is guaranteed to be accurate. Do not use for any real decisions.</strong></p>
+            </section>
+          </div>
+        </div>
+      )}
 
       {/* Comparison Panel */}
       {showComparison && savedAssessments.length > 0 && (
