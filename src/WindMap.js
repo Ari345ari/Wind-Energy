@@ -2,8 +2,6 @@ import React, { useState, useCallback, useRef, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import './App.css';
-import { Analytics } from "@vercel/analytics/react"
-
 
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -79,7 +77,6 @@ const gridLocations = [
   { lat: 43.559833, lon: 105.613500 },
 ];
 
-// grid distance calculations
 const createGridDistanceCalculator = () => {
   const cache = new Map();
   
@@ -151,7 +148,6 @@ const getWindQuality = (speed) => {
   return { quality: 'Poor', color: '#6b7280' };
 };
 
-//debounce
 const useDebounce = (callback, delay) => {
   const timeoutRef = useRef(null);
   return useCallback((...args) => {
@@ -160,7 +156,6 @@ const useDebounce = (callback, delay) => {
   }, [callback, delay]);
 };
 
-// wind farm popup
 const WindFarmPopup = ({ farm }) => (
   <div className="popup-content">
     <div className="popup-header">
@@ -179,7 +174,6 @@ const WindFarmPopup = ({ farm }) => (
   </div>
 );
 
-//assessment popup
 const AssessmentPopup = ({ location, onSave, isSaved }) => {
   const windQuality = getWindQuality(location.avgWindSpeed);
   
@@ -277,6 +271,7 @@ function MongoliaWindMap() {
   const [filterMinCapacity, setFilterMinCapacity] = useState(0);
   const [savedAssessments, setSavedAssessments] = useState([]);
   const [showComparison, setShowComparison] = useState(false);
+  const [showInstructions, setShowInstructions] = useState(true);
   
   const calculateGridDistance = useMemo(() => createGridDistanceCalculator(), []);
 
@@ -298,18 +293,15 @@ function MongoliaWindMap() {
         throw new Error('No wind data available');
       }
       
-     // const dailyWindSpeedsMax = data.daily.wind_speed_10m_max;
       const dailyWindSpeedsMean = data.daily.wind_speed_10m_mean;
       const timestamps = data.daily.time;
       
-      //avg from data
       const recentData = dailyWindSpeedsMean.slice(-30);
       const avgWindSpeed = recentData.reduce((a, b) => a + b, 0) / recentData.length;
       
-      //monthly avg for trends
       const monthlyAvg = {};
       timestamps.forEach((time, idx) => {
-        const month = time.substring(0, 7); // y + m
+        const month = time.substring(0, 7);
         if (!monthlyAvg[month]) monthlyAvg[month] = [];
         monthlyAvg[month].push(dailyWindSpeedsMean[idx]);
       });
@@ -389,9 +381,58 @@ function MongoliaWindMap() {
   };
 
   return (
-    <div 
-      className="wind-map-container"
-    >
+    <div className="wind-map-container">
+      {/* Instructions Modal */}
+      {showInstructions && (
+        <div className="modal-overlay" onClick={() => setShowInstructions(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <button 
+              className="modal-close"
+              onClick={() => setShowInstructions(false)}
+            >
+              ×
+            </button>
+            <h2 className="modal-title">Welcome to WindScout</h2>
+            <div className="modal-body">
+              <div className="instruction-step">
+                <span className="step-number">1</span>
+                <div className="step-content">
+                  <h3>Explore Wind Farms</h3>
+                  <p>Blue turbine markers (⚡) show existing operational wind farms across Mongolia</p>
+                </div>
+              </div>
+              <div className="instruction-step">
+                <span className="step-number">2</span>
+                <div className="step-content">
+                  <h3>Assess New Sites</h3>
+                  <p>Click anywhere on the map to analyze wind potential. A red location marker (📍) will appear with detailed assessment data</p>
+                </div>
+              </div>
+              <div className="instruction-step">
+                <span className="step-number">3</span>
+                <div className="step-content">
+                  <h3>Compare Locations</h3>
+                  <p>Click the 💾 Save button in any assessment popup to save it for comparison. View all saved sites using the Compare button</p>
+                </div>
+              </div>
+              <div className="instruction-step">
+                <span className="step-number">4</span>
+                <div className="step-content">
+                  <h3>Customize View</h3>
+                  <p>Switch between map layers and filter wind farms by capacity using the controls at the bottom</p>
+                </div>
+              </div>
+            </div>
+            <button 
+              className="modal-start-btn"
+              onClick={() => setShowInstructions(false)}
+            >
+              Get Started
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Error Banner */}
       {error && (
         <div className="error-banner" role="alert">
@@ -402,7 +443,7 @@ function MongoliaWindMap() {
       {/* Header */}
       <header className={`header-panel ${uiVisible ? 'visible' : 'hidden'}`}>
         <div className="title-row">
-          <h1 className="main-title">🌬️ Mongolia Wind Energy</h1>
+          <h1 className="main-title">WindScout Mongolia</h1>
           <span className="live-badge">Demo</span>
         </div>
         <p className="subtitle">Wind farm locations & site assessment</p>
@@ -456,6 +497,14 @@ function MongoliaWindMap() {
               📊 Compare ({savedAssessments.length})
             </button>
           )}
+          
+          <button
+            onClick={() => setShowInstructions(true)}
+            className="control-btn help-btn"
+            title="Show instructions"
+          >
+            ❓ Help
+          </button>
         </div>
       </nav>
 
@@ -538,7 +587,6 @@ function MongoliaWindMap() {
             attribution="© Map Data"
           />
 
-          {/* Wind Farms */}
           {filteredWindFarms.map((farm) => (
             <Marker key={farm.id} position={farm.position} icon={turbineIcon}>
               <Popup maxWidth={350}>
@@ -547,7 +595,6 @@ function MongoliaWindMap() {
             </Marker>
           ))}
 
-          {/* User Assessment */}
           {selectedLocation && (
             <Marker position={selectedLocation.position} icon={userIcon}>
               <Popup maxWidth={400}>
@@ -561,7 +608,6 @@ function MongoliaWindMap() {
           )}
         </MapContainer>
 
-        {/* Loading */}
         {loading && (
           <div className="loading-overlay">
             <div className="loading-content">

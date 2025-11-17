@@ -9,6 +9,150 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
+/* Instructions Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal-content {
+  background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  padding: 32px;
+  max-width: 600px;
+  width: 90%;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  position: relative;
+  animation: slideUp 0.4s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1.5rem;
+  line-height: 1;
+  transition: all 0.2s ease;
+}
+
+.modal-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
+}
+
+.modal-title {
+  color: white;
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0 0 24px 0;
+  text-align: center;
+  background: linear-gradient(135deg, #3b82f6, #10b981);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-bottom: 28px;
+}
+
+.instruction-step {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.step-number {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: 1.1rem;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-content h3 {
+  color: white;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0 0 6px 0;
+}
+
+.step-content p {
+  color: #9ca3af;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.modal-start-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  border: none;
+  color: white;
+  padding: 14px 24px;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4);
+}
+
+.modal-start-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
+}
+
 /* Error Banner */
 .error-banner {
   position: absolute;
@@ -201,6 +345,15 @@ body {
   box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
 }
 
+.help-btn {
+  background: rgba(59, 130, 246, 0.2) !important;
+  border-color: rgba(59, 130, 246, 0.4) !important;
+}
+
+.help-btn:hover {
+  background: rgba(59, 130, 246, 0.3) !important;
+}
+
 /* Layer Select & Slider */
 .layer-select,
 .slider-container {
@@ -339,32 +492,7 @@ body {
   font-size: 0.75rem;
   font-weight: 600;
   color: white;
-}
-
-.status-badge.operational {
   background: #10b981;
-}
-
-.status-badge.planned {
-  background: #f59e0b;
-}
-
-.status-badge.construction {
-  background: #3b82f6;
-}
-
-/* Score Circle */
-.score-circle {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  border: 3px solid;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: #111827;
 }
 
 /* Popup Sections */
@@ -389,83 +517,6 @@ body {
 
 .info-grid div {
   line-height: 1.5;
-}
-
-/* Metrics */
-.metric-row {
-  display: flex;
-  gap: 16px;
-  margin: 12px 0;
-}
-
-.metric {
-  flex: 1;
-  text-align: center;
-  padding: 12px;
-  background: #f3f4f6;
-  border-radius: 8px;
-}
-
-.metric-value {
-  display: block;
-  font-size: 1.3rem;
-  font-weight: 700;
-  color: #3b82f6;
-}
-
-.metric-label {
-  display: block;
-  font-size: 0.75rem;
-  color: #6b7280;
-  margin-top: 4px;
-}
-
-/* Wind Metric Display */
-.wind-metric-display {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px;
-  background: #f3f4f6;
-  border-radius: 8px;
-  margin: 12px 0;
-}
-
-.wind-speed-large {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #111827;
-}
-
-.wind-quality-badge {
-  padding: 6px 12px;
-  border-radius: 8px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: white;
-}
-
-/* Notes Text */
-.notes-text {
-  margin-top: 8px;
-  font-size: 0.85rem;
-  color: #6b7280;
-  font-style: italic;
-}
-
-/* Weather Specific */
-.weather-title {
-  margin: 0 0 12px 0;
-  font-size: 1.05rem;
-  font-weight: 600;
-  color: #111827;
-}
-
-.weather-timestamp {
-  margin-top: 8px;
-  font-size: 0.75rem;
-  color: #6b7280;
-  font-style: italic;
 }
 
 /* Assessment Title */
@@ -747,6 +798,23 @@ body {
     grid-template-columns: repeat(2, 1fr);
     gap: 8px;
   }
+  
+  .modal-content {
+    padding: 24px;
+    width: 95%;
+  }
+  
+  .modal-title {
+    font-size: 1.5rem;
+  }
+  
+  .step-content h3 {
+    font-size: 1rem;
+  }
+  
+  .step-content p {
+    font-size: 0.85rem;
+  }
 }
 
 @media (max-width: 480px) {
@@ -791,6 +859,21 @@ body {
 
   .capacity-slider {
     width: 100%;
+  }
+  
+  .modal-content {
+    padding: 20px;
+  }
+  
+  .modal-title {
+    font-size: 1.3rem;
+    margin-bottom: 20px;
+  }
+  
+  .step-number {
+    width: 32px;
+    height: 32px;
+    font-size: 1rem;
   }
 }
 
