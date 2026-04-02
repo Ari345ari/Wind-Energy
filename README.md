@@ -1,4 +1,4 @@
-Mongolia Wind Energy Map
+WindScout Mongolia
 An interactive web application for visualizing existing wind farms in Mongolia
 and assessing potential wind energy sites with real-time meteorological data 
 and comprehensive economic analysis.
